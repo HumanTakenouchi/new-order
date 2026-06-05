@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>契約書作成依頼 管理ダッシュボード</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/msal.js/2.38.3/msal-browser.min.js" defer></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif; background: #F1F5FB; padding: 1rem; }
+.wrap { max-width: 980px; margin: 0 auto; }
+.header-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 8px; }
+.header-title { font-size: 16px; font-weight: 600; color: #1E2761; }
+.header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.login-btn { font-size: 12px; padding: 5px 14px; border-radius: 6px; border: none; background: #2563EB; color: white; cursor: pointer; font-weight: 500; }
+.login-btn:hover { background: #1D4ED8; }
+.logout-btn { font-size: 12px; padding: 5px 14px; border-radius: 6px; border: 0.5px solid #CBD5E1; background: white; color: #64748B; cursor: pointer; }
+.user-name { font-size: 12px; color: #64748B; }
+.sync-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; padding: 8px 12px; background: white; border-radius: 8px; border: 0.5px solid #E2E8F0; }
+.sync-status { font-size: 12px; color: #64748B; flex: 1; }
+.sync-btn { font-size: 12px; padding: 4px 12px; border-radius: 6px; border: 0.5px solid #CBD5E1; background: white; color: #1E293B; cursor: pointer; }
+.sync-btn:hover { background: #F1F5FB; }
+.sync-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.auth-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; padding: 8px 12px; background: #F1F5FB; border-radius: 8px; flex-wrap: wrap; }
+.auth-bar label { font-size: 12px; color: #64748B; }
+.auth-bar input[type=password] { font-size: 13px; padding: 4px 8px; border-radius: 6px; border: 0.5px solid #CBD5E1; background: white; color: #1E293B; width: 110px; height: 28px; }
+.auth-bar button { font-size: 12px; padding: 4px 10px; border-radius: 6px; border: 0.5px solid #CBD5E1; background: white; color: #1E293B; cursor: pointer; height: 28px; }
+.mode-badge { font-size: 11px; padding: 2px 10px; border-radius: 100px; font-weight: 500; }
+.mode-edit { background: #DCFCE7; color: #15803D; }
+.mode-view { background: #F1F5F9; color: #64748B; border: 0.5px solid #E2E8F0; }
+.auth-err { font-size: 12px; color: #DC2626; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+.metric { background: white; border-radius: 8px; padding: 10px 12px; border: 0.5px solid #E2E8F0; }
+.metric-label { font-size: 12px; color: #64748B; margin-bottom: 4px; }
+.metric-val { font-size: 22px; font-weight: 500; color: #1E293B; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 1rem; padding: 8px 12px; background: white; border-radius: 8px; border: 0.5px solid #E2E8F0; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748B; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 1rem; }
+.filter-row input, .filter-row select { font-size: 13px; padding: 6px 10px; border-radius: 6px; border: 0.5px solid #CBD5E1; background: white; color: #1E293B; height: 32px; width: 100%; }
+.cards { display: flex; flex-direction: column; gap: 8px; }
+.card { background: white; border: 0.5px solid #E2E8F0; border-radius: 10px; padding: 12px 14px; transition: border-color 0.15s; }
+.card:hover { border-color: #CBD5E1; }
+.card.deadline-over   { border-left: 3px solid #E24B4A; }
+.card.deadline-urgent { border-left: 3px solid #EA580C; }
+.card.deadline-soon   { border-left: 3px solid #BA7517; }
+.card-header { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.card-no { font-size: 11px; color: #94A3B8; min-width: 24px; padding-top: 2px; }
+.card-main { flex: 1; min-width: 0; }
+.card-company { font-size: 14px; font-weight: 500; color: #1E2761; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-staff { font-size: 13px; color: #64748B; margin-top: 2px; }
+.card-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.badge { font-size: 11px; padding: 2px 8px; border-radius: 100px; font-weight: 500; white-space: nowrap; }
+.badge-branch  { background: #F1F5F9; color: #64748B; border: 0.5px solid #E2E8F0; }
+.badge-new     { background: #DBEAFE; color: #1D4ED8; }
+.badge-replace { background: #FFEDD5; color: #9A3412; }
+.badge-done    { background: #DCFCE7; color: #15803D; }
+.badge-check   { background: #FFEDD5; color: #9A3412; }
+.badge-action  { background: #FFEDD5; color: #9A3412; }
+.badge-cancel  { background: #FEE2E2; color: #991B1B; }
+.badge-pending { background: #F1F5F9; color: #64748B; border: 0.5px solid #E2E8F0; }
+.card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 90px; }
+.dl-none   { font-size: 12px; color: #94A3B8; }
+.dl-over   { font-size: 12px; font-weight: 500; color: #991B1B; background: #FEE2E2; border-radius: 6px; padding: 2px 7px; }
+.dl-urgent { font-size: 12px; font-weight: 500; color: #9A3412; background: #FFEDD5; border-radius: 6px; padding: 2px 7px; }
+.dl-soon   { font-size: 12px; font-weight: 500; color: #854F0B; background: #FEF9C3; border-radius: 6px; padding: 2px 7px; }
+.dl-normal { font-size: 12px; color: #64748B; }
+.dl-label  { font-size: 10px; color: #94A3B8; text-align: right; }
+.card-detail { display: none; margin-top: 12px; border-top: 0.5px solid #E2E8F0; padding-top: 12px; }
+.card-detail.open { display: block; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; margin-bottom: 12px; }
+.info-row { font-size: 12px; }
+.info-label { color: #64748B; margin-bottom: 2px; }
+.info-val { color: #1E293B; }
+.edit-section { border-top: 0.5px solid #E2E8F0; padding-top: 12px; }
+.section-title { font-size: 11px; font-weight: 500; color: #64748B; margin-bottom: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+.edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.edit-group { display: flex; flex-direction: column; gap: 4px; }
+.edit-group.full { grid-column: 1 / -1; }
+.edit-label { font-size: 11px; color: #64748B; }
+.edit-group select, .edit-group textarea { font-size: 13px; padding: 6px 8px; border-radius: 6px; border: 0.5px solid #CBD5E1; background: white; color: #1E293B; width: 100%; }
+.edit-group select:disabled, .edit-group textarea:disabled { opacity: 0.5; cursor: not-allowed; background: #F1F5F9; }
+.edit-group textarea { resize: vertical; min-height: 56px; font-family: inherit; }
+.send-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.send-group { display: flex; flex-direction: column; gap: 6px; }
+.send-label { font-size: 11px; font-weight: 500; color: #64748B; }
+.send-sub { font-size: 11px; color: #94A3B8; }
+.send-fields { display: flex; flex-direction: column; gap: 6px; }
+.send-fields select, .send-fields input { font-size: 12px; padding: 5px 8px; border-radius: 6px; border: 0.5px solid #CBD5E1; background: white; color: #1E293B; width: 100%; }
+.send-fields select:disabled, .send-fields input:disabled { opacity: 0.5; cursor: not-allowed; background: #F1F5F9; }
+.save-btn { margin-top: 12px; padding: 7px 16px; border-radius: 6px; border: 0.5px solid #CBD5E1; background: white; color: #1E293B; font-size: 13px; cursor: pointer; }
+.save-btn:hover { background: #F1F5FB; }
+.save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.saved-msg { font-size: 12px; color: #15803D; margin-left: 10px; display: none; }
+.empty { text-align: center; padding: 2rem; color: #94A3B8; font-size: 14px; }
+.loading { text-align: center; padding: 2rem; color: #64748B; font-size: 14px; }
+.error-msg { padding: 12px 16px; background: #FEE2E2; border-radius: 8px; color: #991B1B; font-size: 13px; margin-bottom: 1rem; border-left: 3px solid #DC2626; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="header-bar">
+  <div class="header-title">契約書作成依頼 管理ダッシュボード</div>
+  <div class="header-right">
+    <span class="user-name" id="user-name"></span>
+    <button class="login-btn" id="login-btn" onclick="signIn()" disabled style="opacity:0.5;cursor:not-allowed">読み込み中…</button>
+    <button class="logout-btn" id="logout-btn" style="display:none" onclick="signOut()">ログアウト</button>
+  </div>
+</div>
+
+<div id="error-area"></div>
+
+<div class="sync-bar">
+  <span class="sync-status" id="sync-status">ログインしてデータを読み込んでください</span>
+  <button class="sync-btn" id="sync-btn" onclick="loadData()" disabled>🔄 更新</button>
+</div>
+
+<div class="auth-bar">
+  <span class="mode-badge mode-view" id="mode-badge">閲覧モード</span>
+  <div id="pw-form" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <label>編集パスワード</label>
+    <input type="password" id="pw-input" placeholder="••••••" onkeydown="if(event.key==='Enter')tryLogin()">
+    <button onclick="tryLogin()">解除</button>
+    <span class="auth-err" id="auth-err" style="display:none">パスワードが違います</span>
+  </div>
+  <div id="logout-edit-form" style="display:none">
+    <button onclick="doLogout()">閲覧モードに戻る</button>
+  </div>
+</div>
+
+<div class="metrics" id="metrics"></div>
+
+<div class="legend">
+  <span class="legend-item"><span class="legend-dot" style="background:#E24B4A"></span>期限切れ</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#EA580C"></span>3日以内</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#BA7517"></span>7日以内</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#CBD5E1"></span>通常</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#E2E8F0"></span>期限未定</span>
+</div>
+
+<div class="filter-row">
+  <input type="text" id="search" placeholder="企業名・スタッフ名で検索…">
+  <select id="filterBranch"><option value="">すべての支店</option></select>
+  <select id="filterTanto"><option value="">すべての担当者</option></select>
+  <select id="filterKind">
+    <option value="">新規／差し替え　すべて</option>
+    <option value="新規">新規契約</option>
+    <option value="差し替え">差し替え</option>
+  </select>
+  <select id="filterStatus">
+    <option value="">すべてのステータス</option>
+    <option>依頼受付</option>
+    <option>支店チェック待ち</option>
+    <option>支店対応依頼中</option>
+    <option>作成完了</option>
+    <option>依頼キャンセル</option>
+  </select>
+  <select id="filterDeadline">
+    <option value="">すべての期限</option>
+    <option value="over">期限切れ</option>
+    <option value="urgent">3日以内</option>
+    <option value="soon">7日以内</option>
+    <option value="none">期限未定</option>
+  </select>
+</div>
+
+<div class="cards" id="cards">
+  <div class="loading">Microsoftアカウントでログインしてデータを読み込んでください</div>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  設定（変更が必要な場合はここだけ編集）
+// ═══════════════════════════════════════
+const CONFIG = {
+  clientId:  'f7fbcd5a-fbb3-4ca6-8e78-c4f7df82bb4c',
+  tenantId:  '12196b8c-4c46-441c-8edc-12fd2c69d733',
+  siteHost:  'humans.sharepoint.com',
+  sitePath:  '/sites/msteams_d48605',
+  filePath:  '/Shared Documents/アプリ/Microsoft Forms/【テスト】竹之内 新規依頼/data.txt',
+};
+
+const PW       = '85200';
+const MAKERS   = ['（未設定）','中野','中村','田村'];
+const SENDERS  = ['（未設定）','竹之内','井上','清瀧'];
+const STATUSES = ['依頼受付','支店チェック待ち','支店対応依頼中','作成完了','依頼キャンセル'];
+
+let isEdit       = false;
+let msalInstance = null;
+let accessToken  = null;
+let state        = [];
+const today = new Date(); today.setHours(0,0,0,0);
+
+// ═══════════════════════════════════════
+//  Microsoft認証（MSAL）
+// ═══════════════════════════════════════
+async function initMsal() {
+  msalInstance = new msal.PublicClientApplication({
+    auth: {
+      clientId:    CONFIG.clientId,
+      authority:   `https://login.microsoftonline.com/${CONFIG.tenantId}`,
+      redirectUri: window.location.href.split('?')[0],
+    },
+    cache: { cacheLocation: 'sessionStorage' }
+  });
+  await msalInstance.initialize();
+  const resp = await msalInstance.handleRedirectPromise();
+  if (resp) { onSignedIn(resp); return; }
+  const accounts = msalInstance.getAllAccounts();
+  if (accounts.length > 0) {
+    try {
+      const silent = await msalInstance.acquireTokenSilent({
+        scopes: ['Files.ReadWrite','Sites.ReadWrite.All'],
+        account: accounts[0]
+      });
+      onSignedIn(silent);
+    } catch(e) { /* サイレント失敗→ログインボタン表示のまま */ }
+  }
+}
+
+async function signIn() {
+  try {
+    const resp = await msalInstance.loginPopup({
+      scopes: ['Files.ReadWrite','Sites.ReadWrite.All']
+    });
+    onSignedIn(resp);
+  } catch(e) { showError('ログインに失敗しました: ' + e.message); }
+}
+
+function signOut() {
+  msalInstance.logoutPopup();
+  accessToken = null;
+  document.getElementById('login-btn').style.display  = '';
+  document.getElementById('logout-btn').style.display = 'none';
+  document.getElementById('user-name').textContent    = '';
+  document.getElementById('sync-btn').disabled        = true;
+  document.getElementById('sync-status').textContent  = 'ログインしてデータを読み込んでください';
+  state = [];
+  document.getElementById('cards').innerHTML = '<div class="loading">Microsoftアカウントでログインしてデータを読み込んでください</div>';
+  renderMetrics([]);
+}
+
+function onSignedIn(resp) {
+  accessToken = resp.accessToken;
+  const name  = resp.account?.name || resp.account?.username || '';
+  document.getElementById('user-name').textContent    = name;
+  document.getElementById('login-btn').style.display  = 'none';
+  document.getElementById('logout-btn').style.display = '';
+  document.getElementById('sync-btn').disabled        = false;
+  loadData();
+}
+
+// ═══════════════════════════════════════
+//  Graph API（SharePoint読み書き）
+// ═══════════════════════════════════════
+function graphUrl() {
+  const enc = encodeURIComponent(CONFIG.filePath);
+  return `https://graph.microsoft.com/v1.0/sites/${CONFIG.siteHost}:${CONFIG.sitePath}:/drive/root:${enc}:/content`;
+}
+
+async function loadData() {
+  document.getElementById('sync-status').textContent = '読み込み中…';
+  document.getElementById('sync-btn').disabled = true;
+  document.getElementById('cards').innerHTML   = '<div class="loading">データを読み込んでいます…</div>';
+  try {
+    const res = await fetch(graphUrl(), {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+    const text = await res.text();
+    let raw = [];
+    try { raw = JSON.parse(text); } catch { raw = []; }
+    if (!Array.isArray(raw)) raw = [raw];
+    state = expandRows(raw);
+    rebuildFilters();
+    renderAll();
+    const now = new Date().toLocaleTimeString('ja-JP');
+    document.getElementById('sync-status').textContent = `最終更新：${now}　（${state.length}件）`;
+  } catch(e) {
+    showError('データの読み込みに失敗しました。<br>詳細: ' + e.message);
+    document.getElementById('sync-status').textContent = '読み込み失敗';
+    document.getElementById('cards').innerHTML = '<div class="empty">データの読み込みに失敗しました。更新ボタンを押してください。</div>';
+  } finally {
+    document.getElementById('sync-btn').disabled = false;
+  }
+}
+
+async function saveData() {
+  if (!accessToken) return;
+  const payload = state.map(d => ({
+    Id: d.Id, 支店: d.支店, 営業担当: d.営業担当,
+    企業: d.企業, スタッフ: d.スタッフ, 契約: d.契約,
+    社保: d.社保, 就労制限: d.就労制限, 継続雇用: d.継続雇用,
+    派遣: d.派遣, 雇用: d.雇用, オーダー: d.オーダー,
+    期限: d.期限, 備考: d._note,
+    _status: d._status, _maker: d._maker,
+    _corp_sender: d._corp_sender, _corp_date: d._corp_date,
+    _staff_sender: d._staff_sender, _staff_date: d._staff_date,
+  }));
+  const res = await fetch(graphUrl(), {
+    method:  'PUT',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'text/plain' },
+    body:    JSON.stringify(payload, null, 2)
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+}
+
+function showError(msg) {
+  document.getElementById('error-area').innerHTML = `<div class="error-msg">${msg}</div>`;
+  setTimeout(() => { document.getElementById('error-area').innerHTML = ''; }, 6000);
+}
+
+// ═══════════════════════════════════════
+//  データ処理
+// ═══════════════════════════════════════
+function expandRows(raw) {
+  const rows = [];
+  raw.forEach(d => {
+    const sf   = d.スタッフ || d['スタッフ名'] || '—';
+    const list = sf.split(/\s*[\/／]\s*/).map(s => s.trim()).filter(Boolean);
+    list.forEach((s, i) => rows.push({
+      ...d,
+      _staffName:    s,
+      _uid:          String(d.Id || Math.random()) + '-' + i,
+      _status:       d._status       || '依頼受付',
+      _maker:        d._maker        || '（未設定）',
+      _note:         i === 0 ? (d._note || d.備考 || '') : '',
+      _corp_sender:  d._corp_sender  || '（未設定）',
+      _corp_date:    d._corp_date    || '',
+      _staff_sender: d._staff_sender || '（未設定）',
+      _staff_date:   d._staff_date   || '',
+      _open: false
+    }));
+  });
+  return rows;
+}
+
+function rebuildFilters() {
+  const branches = [...new Set(state.map(d => d.支店).filter(Boolean))];
+  const tantos   = [...new Set(state.map(d => d.営業担当).filter(Boolean))];
+  document.getElementById('filterBranch').innerHTML =
+    '<option value="">すべての支店</option>'   + branches.map(b => `<option>${b}</option>`).join('');
+  document.getElementById('filterTanto').innerHTML  =
+    '<option value="">すべての担当者</option>' + tantos.map(t => `<option>${t}</option>`).join('');
+}
+
+function parseDeadline(v) {
+  if (!v || v === '') return null;
+  const n = parseFloat(v);
+  if (!isNaN(n) && n > 40000) {
+    const d = new Date(Math.round((n - 25569) * 86400 * 1000));
+    d.setHours(0,0,0,0); return d;
+  }
+  const parts = v.replace(/[年月\/\-]/g,' ').split(/\s+/).filter(Boolean);
+  if (parts.length >= 3) {
+    const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+    d.setHours(0,0,0,0); return d;
+  }
+  return null;
+}
+function deadlineStatus(v) {
+  const d = parseDeadline(v); if (!d) return 'none';
+  const diff = Math.ceil((d - today) / 86400000);
+  if (diff < 0) return 'over'; if (diff <= 3) return 'urgent'; if (diff <= 7) return 'soon'; return 'normal';
+}
+function deadlineLabel(v) {
+  const d = parseDeadline(v); if (!d) return { cls: 'dl-none', text: '期限未定', sub: null };
+  const diff = Math.ceil((d - today) / 86400000);
+  const ds   = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+  if (diff < 0)   return { cls: 'dl-over',   text: ds, sub: `${Math.abs(diff)}日超過` };
+  if (diff === 0) return { cls: 'dl-over',   text: ds, sub: '本日期限' };
+  if (diff <= 3)  return { cls: 'dl-urgent', text: ds, sub: `あと${diff}日` };
+  if (diff <= 7)  return { cls: 'dl-soon',   text: ds, sub: `あと${diff}日` };
+  return { cls: 'dl-normal', text: ds, sub: null };
+}
+function cardBorderClass(v) {
+  const s = deadlineStatus(v);
+  if (s === 'over')   return 'deadline-over';
+  if (s === 'urgent') return 'deadline-urgent';
+  if (s === 'soon')   return 'deadline-soon';
+  return '';
+}
+function statusBadgeClass(s) {
+  if (!s || s === '依頼受付')  return 'badge-pending';
+  if (s === '作成完了')         return 'badge-done';
+  if (s === '支店チェック待ち' || s === '支店対応依頼中') return 'badge-check';
+  if (s === '依頼キャンセル')   return 'badge-cancel';
+  return 'badge-pending';
+}
+function kindBadgeClass(k) { return k && k.includes('差し替え') ? 'badge-replace' : 'badge-new'; }
+
+// ═══════════════════════════════════════
+//  編集モード
+// ═══════════════════════════════════════
+function tryLogin() {
+  if (document.getElementById('pw-input').value === PW) {
+    isEdit = true;
+    document.getElementById('mode-badge').textContent = '編集モード';
+    document.getElementById('mode-badge').className   = 'mode-badge mode-edit';
+    document.getElementById('pw-form').style.display  = 'none';
+    document.getElementById('logout-edit-form').style.display = '';
+    document.getElementById('auth-err').style.display = 'none';
+    renderAll();
+  } else {
+    document.getElementById('auth-err').style.display = '';
+  }
+}
+function doLogout() {
+  isEdit = false;
+  document.getElementById('mode-badge').textContent  = '閲覧モード';
+  document.getElementById('mode-badge').className    = 'mode-badge mode-view';
+  document.getElementById('pw-form').style.display   = 'flex';
+  document.getElementById('logout-edit-form').style.display = 'none';
+  document.getElementById('pw-input').value = '';
+  renderAll();
+}
+
+// ═══════════════════════════════════════
+//  描画
+// ═══════════════════════════════════════
+function getFiltered() {
+  const q      = document.getElementById('search').value.toLowerCase();
+  const branch = document.getElementById('filterBranch').value;
+  const tanto  = document.getElementById('filterTanto').value;
+  const kind   = document.getElementById('filterKind').value;
+  const status = document.getElementById('filterStatus').value;
+  const dl     = document.getElementById('filterDeadline').value;
+  return state.filter(d => {
+    if (q && !d.企業?.toLowerCase().includes(q) && !d._staffName.toLowerCase().includes(q)) return false;
+    if (branch && d.支店      !== branch) return false;
+    if (tanto  && d.営業担当  !== tanto)  return false;
+    if (kind   && !d.契約?.includes(kind)) return false;
+    if (status && d._status   !== status) return false;
+    if (dl) {
+      const s = deadlineStatus(d.期限);
+      if (dl === 'over'   && s !== 'over')   return false;
+      if (dl === 'urgent' && s !== 'urgent') return false;
+      if (dl === 'soon'   && !['urgent','soon'].includes(s)) return false;
+      if (dl === 'none'   && s !== 'none')   return false;
+    }
+    return true;
+  });
+}
+
+function renderMetrics(data) {
+  const total  = data.length;
+  const done   = data.filter(d => d._status === '作成完了').length;
+  const check  = data.filter(d => d._status === '支店チェック待ち' || d._status === '支店対応依頼中').length;
+  const over   = data.filter(d => deadlineStatus(d.期限) === 'over').length;
+  const urgent = data.filter(d => deadlineStatus(d.期限) === 'urgent').length;
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">依頼件数</div><div class="metric-val">${total}</div></div>
+    <div class="metric"><div class="metric-label">作成完了</div><div class="metric-val" style="color:#15803D">${done}</div></div>
+    <div class="metric"><div class="metric-label">支店対応中</div><div class="metric-val" style="color:#EA580C">${check}</div></div>
+    <div class="metric"><div class="metric-label">期限切れ</div><div class="metric-val" style="color:#DC2626">${over}</div></div>
+    <div class="metric"><div class="metric-label">3日以内</div><div class="metric-val" style="color:#C2410C">${urgent}</div></div>`;
+}
+
+function senderOpts(sel) { return SENDERS.map(s  => `<option${s===sel?' selected':''}>${s}</option>`).join(''); }
+function makerOpts(sel)  { return MAKERS.map(s   => `<option${s===sel?' selected':''}>${s}</option>`).join(''); }
+function statusOpts(sel) { return STATUSES.map(s => `<option${s===sel?' selected':''}>${s}</option>`).join(''); }
+
+function renderCards(data) {
+  const el = document.getElementById('cards');
+  if (!data.length) { el.innerHTML = '<div class="empty">該当する依頼はありません</div>'; return; }
+  const dis = isEdit ? '' : 'disabled';
+  el.innerHTML = data.map(d => {
+    const dl = deadlineLabel(d.期限);
+    const bc = cardBorderClass(d.期限);
+    return `
+    <div class="card ${bc}" id="card-${d._uid}">
+      <div class="card-header" onclick="toggleCard('${d._uid}')">
+        <div class="card-no">#${d.Id}</div>
+        <div class="card-main">
+          <div class="card-company">${d.企業 || '—'}</div>
+          <div class="card-staff">${d._staffName}　<span style="color:#94A3B8">担当: ${d.営業担当||'—'}</span></div>
+          <div class="card-badges">
+            <span class="badge badge-branch">${d.支店||'—'}</span>
+            <span class="badge ${kindBadgeClass(d.契約)}">${d.契約||'—'}</span>
+            <span class="badge ${statusBadgeClass(d._status)}" id="sbadge-${d._uid}">${d._status}</span>
+            ${d._maker!=='（未設定）'?`<span class="badge badge-branch">作成: ${d._maker}</span>`:''}
+          </div>
+        </div>
+        <div class="card-right">
+          <span class="${dl.cls}">${dl.text}</span>
+          ${dl.sub?`<span class="dl-label">${dl.sub}</span>`:''}
+          <span style="font-size:16px;color:#94A3B8;transition:transform 0.2s;display:inline-block" id="icon-${d._uid}">›</span>
+        </div>
+      </div>
+      <div class="card-detail${d._open?' open':''}" id="detail-${d._uid}">
+        <div class="info-grid">
+          <div class="info-row"><div class="info-label">社会保険</div><div class="info-val">${d.社保||'—'}</div></div>
+          <div class="info-row"><div class="info-label">就労制限</div><div class="info-val">${d.就労制限||'—'}</div></div>
+          <div class="info-row"><div class="info-label">継続雇用</div><div class="info-val">${d.継続雇用||'—'}</div></div>
+          <div class="info-row"><div class="info-label">オーダーコード</div><div class="info-val">${d.オーダー||'—'}</div></div>
+          <div class="info-row"><div class="info-label">派遣契約書</div><div class="info-val">${d.派遣||'—'}</div></div>
+          <div class="info-row"><div class="info-label">雇用契約書</div><div class="info-val">${d.雇用||'—'}</div></div>
+        </div>
+        <div class="edit-section">
+          <div class="section-title">作成状況</div>
+          <div class="edit-grid">
+            <div class="edit-group">
+              <div class="edit-label">ステータス</div>
+              <select id="status-${d._uid}" ${dis}>${statusOpts(d._status)}</select>
+            </div>
+            <div class="edit-group">
+              <div class="edit-label">作成者</div>
+              <select id="maker-${d._uid}" ${dis}>${makerOpts(d._maker)}</select>
+            </div>
+            <div class="edit-group full">
+              <div class="edit-label">備考</div>
+              <textarea id="note-${d._uid}" ${dis}>${d._note}</textarea>
+            </div>
+          </div>
+          <div class="section-title" style="margin-top:14px">送付状況</div>
+          <div class="send-row">
+            <div class="send-group">
+              <div class="send-label">企業送付</div>
+              <div class="send-fields">
+                <div class="send-sub">送付者</div>
+                <select id="csender-${d._uid}" ${dis}>${senderOpts(d._corp_sender)}</select>
+                <div class="send-sub">対応日</div>
+                <input type="date" id="cdate-${d._uid}" value="${d._corp_date}" ${dis}>
+              </div>
+            </div>
+            <div class="send-group">
+              <div class="send-label">スタッフ送付</div>
+              <div class="send-fields">
+                <div class="send-sub">送付者</div>
+                <select id="ssender-${d._uid}" ${dis}>${senderOpts(d._staff_sender)}</select>
+                <div class="send-sub">対応日</div>
+                <input type="date" id="sdate-${d._uid}" value="${d._staff_date}" ${dis}>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;margin-top:12px">
+            <button class="save-btn" onclick="saveCard('${d._uid}')" ${dis?'disabled':''}>保存</button>
+            <span class="saved-msg" id="saved-${d._uid}">SharePointに保存しました ✓</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  data.forEach(d => {
+    if (d._open) {
+      const ic = document.getElementById('icon-'+d._uid);
+      if (ic) ic.style.transform = 'rotate(90deg)';
+    }
+  });
+}
+
+function toggleCard(uid) {
+  const item = state.find(d => d._uid === uid); if (!item) return;
+  item._open = !item._open;
+  const detail = document.getElementById('detail-'+uid);
+  if (detail) detail.classList.toggle('open', item._open);
+  const icon = document.getElementById('icon-'+uid);
+  if (icon) icon.style.transform = item._open ? 'rotate(90deg)' : '';
+}
+
+async function saveCard(uid) {
+  if (!isEdit) return;
+  const item = state.find(d => d._uid === uid); if (!item) return;
+  item._status       = document.getElementById('status-'+uid).value;
+  item._maker        = document.getElementById('maker-'+uid).value;
+  item._note         = document.getElementById('note-'+uid).value;
+  item._corp_sender  = document.getElementById('csender-'+uid).value;
+  item._corp_date    = document.getElementById('cdate-'+uid).value;
+  item._staff_sender = document.getElementById('ssender-'+uid).value;
+  item._staff_date   = document.getElementById('sdate-'+uid).value;
+  const badge = document.getElementById('sbadge-'+uid);
+  if (badge) { badge.className = 'badge '+statusBadgeClass(item._status); badge.textContent = item._status; }
+  try {
+    await saveData();
+    const msg = document.getElementById('saved-'+uid);
+    if (msg) { msg.style.display = 'inline'; setTimeout(() => { msg.style.display = 'none'; }, 3000); }
+  } catch(e) {
+    showError('保存に失敗しました: ' + e.message);
+  }
+  renderMetrics(getFiltered());
+}
+
+function renderAll() { const d = getFiltered(); renderMetrics(d); renderCards(d); }
+
+['search','filterBranch','filterTanto','filterKind','filterStatus','filterDeadline']
+  .forEach(id => document.getElementById(id).addEventListener('change', renderAll));
+document.getElementById('search').addEventListener('input', renderAll);
+
+// 5分ごとに自動更新
+setInterval(() => { if (accessToken) loadData(); }, 5 * 60 * 1000);
+
+// DOMContentLoaded後にMSAL初期化
+document.addEventListener('DOMContentLoaded', async () => {
+  // MSALスクリプトの読み込み完了を待つ
+  let attempts = 0;
+  while (typeof msal === 'undefined' && attempts < 50) {
+    await new Promise(r => setTimeout(r, 100));
+    attempts++;
+  }
+  if (typeof msal === 'undefined') {
+    showError('認証ライブラリの読み込みに失敗しました。ページを再読み込みしてください。');
+    return;
+  }
+  // ログインボタンを有効化
+  const btn = document.getElementById('login-btn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  btn.style.cursor = 'pointer';
+  btn.textContent = 'Microsoftでログイン';
+  await initMsal();
+});
+</script>
+</body>
+</html>
