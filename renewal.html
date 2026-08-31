@@ -383,10 +383,22 @@ let raw = data.value.map(item => ({
   備考:
   item.fields["Forms_x5099__x8003_"],
 
-  受付日時:
-(item.fields["_x53d7__x4ed8__x65e5__x6642_"] || '')
-  .replace('T',' ')
-  .substring(0,16),
+  受付日時: (() => {
+  const dt = item.fields["_x53d7__x4ed8__x65e5__x6642_"];
+  if (!dt) return '';
+
+  return new Date(dt).toLocaleString(
+    'ja-JP',
+    {
+      year:'numeric',
+      month:'2-digit',
+      day:'2-digit',
+      hour:'2-digit',
+      minute:'2-digit',
+      hour12:false
+    }
+  );
+})(),
   
   _status:
   item.fields["_x4f5c__x6210__x72b6__x6cc1_"],
