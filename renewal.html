@@ -703,12 +703,11 @@ function renderCards(data) {
         <div class="card-no">#${d.Id}</div>
        <div class="card-main">
 
- <div style="
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:8px;
-  ">
+<div style="
+  display:flex;
+  align-items:center;
+  gap:8px;
+">
 
     <div class="card-company">
       ${d.企業 || '—'}
@@ -743,7 +742,6 @@ function renderCards(data) {
         </div>
         <div class="card-right">
           <span style="font-size:11px;color:#64748B">${d.契約開始日||'—'} 〜 ${d.契約終了日||'—'}</span>
-          <span style="font-size:11px;color:#94A3B8">受付: ${d.受付日時 || '―'}</span>
           <span class="${dl.cls}" style="font-size:10px">${dl.sub||''}</span>
           <span style="font-size:16px;color:#94A3B8;transition:transform 0.2s;display:inline-block" id="icon-${d._uid}">›</span>
         </div>
