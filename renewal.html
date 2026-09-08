@@ -327,7 +327,7 @@ async function loadData() {
     const siteId = siteData.id;
 
 const listUrl =
-`https://graph.microsoft.com/v1.0/sites/${CONFIG.siteId}/lists/${CONFIG.listId}/items?$expand=fields`;
+`https://graph.microsoft.com/v1.0/sites/${CONFIG.siteId}/lists/${CONFIG.listId}/items?$expand=fields,lastModifiedByUser`;
 
 const res = await fetch(listUrl, {
   headers: {
@@ -340,7 +340,7 @@ if (!res.ok) {
 }
 
 const data = await res.json();
-
+console.log("Graph取得結果", data.value[0]);
 let raw = data.value.map(item => ({
 
   Id: item.id,
