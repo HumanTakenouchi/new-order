@@ -701,9 +701,39 @@ function renderCards(data) {
     <div class="card ${bc}" id="card-${d._uid}">
       <div class="card-header" onclick="toggleCard('${d._uid}')">
         <div class="card-no">#${d.Id}</div>
-        <div class="card-main">
-          <div class="card-company">${d.企業 || '—'}</div>
-          <div class="card-staff">${d._staffName}　<span style="color:#94A3B8">担当: ${d.営業担当||'—'}</span></div>
+       <div class="card-main">
+
+ <div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+  ">
+
+    <div class="card-company">
+      ${d.企業 || '—'}
+    </div>
+
+   <div style="
+  font-size:11px;
+  color:#64748B;
+  background:#F8FAFC;
+  padding:2px 6px;
+  border-radius:4px;
+  white-space:nowrap;
+">
+  受付: ${d.受付日時 || '―'}
+</div>
+
+  </div>
+
+  <div class="card-staff">
+    ${d._staffName}
+    <span style="color:#94A3B8">
+      担当: ${d.営業担当||'—'}
+    </span>
+  </div>
+  
           <div class="card-badges">
             <span class="badge badge-branch">${d.支店||'—'}</span>
             <span class="badge ${kindBadgeClass(d.契約種別)}">${d.契約種別||'—'}</span>
