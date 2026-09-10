@@ -404,7 +404,7 @@ let raw = data.value.map(item => ({
   item.fields["_x4f5c__x6210__x72b6__x6cc1_"],
 
   _maker:
-  item.fields["_x4f5c__x6210__x8005_"] || "（未設定）"
+  item.fields["_x4f5c__x6210__x8005_"] || "（未設定）",
 
   _note:
 item.fields["_x6cd5__x52d9__x30e1__x30e2_"] || '',
@@ -421,7 +421,7 @@ item.fields["_x30b9__x30bf__x30c3__x30d5__x90"] || '（未設定）',
 
 _staff_date:
 (item.fields["_x30b9__x30bf__x30c3__x30d5__x900"] || '')
-  .substring(0,10),
+  .substring(0,10)
 }));
 
     console.log('取得件数（展開前）:', raw.length);
