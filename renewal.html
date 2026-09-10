@@ -340,7 +340,10 @@ if (!res.ok) {
 }
 
 const data = await res.json();
-console.log("Graph取得結果", data.value[0]);
+console.log(
+  "Graph取得結果",
+  JSON.stringify(data.value[0], null, 2)
+);
 let raw = data.value.map(item => ({
 
   Id: item.id,
@@ -469,8 +472,6 @@ async function saveData(item){
     "_x30b9__x30bf__x30c3__x30d5__x900":
       item._staff_date || null
   };
-
-console.log(payload);
   
   const res = await fetch(url,{
     method:'PATCH',
