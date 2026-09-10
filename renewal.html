@@ -517,26 +517,45 @@ function showError(msg) {
 //  データ処理
 // ═══════════════════════════════════════
 function expandRows(raw) {
-  const rows = [];
-  raw.forEach(d => {
-    const sf   = d.スタッフ || d['スタッフ名'] || '—';
-    const list = sf.split(/\s*[\/／]\s*/).map(s => s.trim()).filter(Boolean);
-    list.forEach((s, i) => rows.push({
-      ...d,
-      _staffName:    s,
-      _uid:          String(d.Id || d.submitDate || d.responder || Math.random()).replace(/[^a-zA-Z0-9]/g,'_') + '_' + i + '_' + String(d.企業||'').replace(/[^a-zA-Z0-9]/g,'_').slice(0,8),
-      _status:       d._status       || '依頼受付',
-      _maker:        d._maker        || '（未設定）',
-      _formNote:     i === 0 ? (d.備考 || '') : '',  // Formsの備考（読み取り専用）
-      _note:         i === 0 ? (d._note || '') : '',  // 法務追記欄（編集可能）
-      _corp_sender:  d._corp_sender  || '（未設定）',
-      _corp_date:    d._corp_date    || '',
-      _staff_sender: d._staff_sender || '（未設定）',
-      _staff_date:   d._staff_date   || '',
-      _open: false
-    }));
-  });
-  return rows;
+
+  return raw.map(d => ({
+
+    ...d,
+
+    _staffName:
+      d.スタッフ || d['スタッフ名'] || '—',
+
+    _uid:
+      String(d.Id),
+
+    _status:
+      d._status || '依頼受付',
+
+    _maker:
+      d._maker || '（未設定）',
+
+    _formNote:
+      d.備考 || '',
+
+    _note:
+      d._note || '',
+
+    _corp_sender:
+      d._corp_sender || '（未設定）',
+
+    _corp_date:
+      d._corp_date || '',
+
+    _staff_sender:
+      d._staff_sender || '（未設定）',
+
+    _staff_date:
+      d._staff_date || '',
+
+    _open:false
+
+  }));
+
 }
 
 function rebuildFilters() {
