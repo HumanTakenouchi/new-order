@@ -470,6 +470,8 @@ async function saveData(item){
       item._staff_date || null
   };
 
+console.log(payload);
+  
   const res = await fetch(url,{
     method:'PATCH',
     headers:{
