@@ -456,7 +456,16 @@ _staff_date:
 }));
 
     console.log('取得件数（展開前）:', raw.length);
-    console.log('取得データ:', JSON.stringify(raw.map(d => ({Id: d.Id, 企業: d.企業, 契約開始日: d.契約開始日}))));
+    console.log('取得データ:',
+  JSON.stringify(
+    raw.map(d => ({
+      Id: d.Id,
+      企業: d.企業,
+      契約種別: d.契約種別,
+      巻き直し決裁取得済み: d.巻き直し決裁取得済み
+    }))
+  )
+);
     state = expandRows(raw);
     console.log('展開後件数:', state.length);
     rebuildFilters();
