@@ -806,12 +806,32 @@ function renderCards(data) {
     </span>
   </div>
   
-          <div class="card-badges">
-            <span class="badge badge-branch">${d.支店||'—'}</span>
-            <span class="badge ${kindBadgeClass(d.契約種別)}">${d.契約種別||'—'}</span>
-            <span class="badge ${statusBadgeClass(d._status)}" id="sbadge-${d._uid}">${d._status}</span>
-            ${d._maker!=='（未設定）'?`<span class="badge badge-branch">作成: ${d._maker}</span>`:''}
-          </div>
+   <div class="card-badges">
+  <span class="badge badge-branch">
+    ${d.支店||'—'}
+  </span>
+
+  <span class="badge ${kindBadgeClass(d.契約種別)}">
+    ${d.契約種別||'—'}
+  </span>
+
+  ${d.巻き直し決裁取得済み
+    ? `<span class="badge badge-decision">
+         決裁: ${d.巻き直し決裁取得済み}
+       </span>`
+    : ''
+  }
+
+  <span class="badge ${statusBadgeClass(d._status)}" id="sbadge-${d._uid}">
+    ${d._status}
+  </span>
+
+  ${d._maker!=='（未設定）'
+    ? `<span class="badge badge-branch">作成: ${d._maker}</span>`
+    : ''
+  }
+</div>
+
         </div>
         <div class="card-right">
           <span style="font-size:11px;color:#64748B">${d.契約開始日||'—'} 〜 ${d.契約終了日||'—'}</span>
