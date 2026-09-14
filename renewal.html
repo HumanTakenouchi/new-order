@@ -340,10 +340,12 @@ if (!res.ok) {
 }
 
 const data = await res.json();
+    
 console.log(
-  "Graph取得結果",
-  JSON.stringify(data.value[0], null, 2)
+  "全件",
+  JSON.stringify(data.value, null, 2)
 );
+
 let raw = data.value.map(item => ({
 
   Id: item.id,
