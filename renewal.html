@@ -808,7 +808,6 @@ function renderCards(data) {
   white-space:nowrap;
 ">
   更新: ${d.更新日時 || '―'}
-  ${d.更新者 ? ` ／ ${d.更新者}` : ''}
 </div>
 
   </div>
@@ -830,8 +829,8 @@ function renderCards(data) {
   </span>
 
 ${d.巻き直し決裁取得済み
- ? `<span class="badge badge-decision">
-      決裁: ${d.巻き直し決裁取得済み}
+ ? `<span class="badge badge-branch">
+      決裁:${d.巻き直し決裁取得済み}
     </span>`
  : ''
 }
@@ -855,7 +854,7 @@ ${d.巻き直し決裁取得済み
       </div>
       <div class="card-detail${d._open?' open':''}" id="detail-${d._uid}">
         <div class="info-grid">
-          <div class="info-row"><div class="info-label">人数</div><div class="info-val">${d.人数||'—'}名</div></div>
+          <div class="info-row"><div class="info-label">人数</div><div class="info-val">${d.人数||'—'}</div></div>
           <div class="info-row"><div class="info-label">契約種別</div><div class="info-val">${d.契約種別||'—'}</div></div>
           <div class="info-row"><div class="info-label">契約開始日</div><div class="info-val">${d.契約開始日||'—'}</div></div>
           <div class="info-row"><div class="info-label">契約終了日</div><div class="info-val">${d.契約終了日||'—'}</div></div>
