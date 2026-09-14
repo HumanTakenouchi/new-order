@@ -397,7 +397,7 @@ item.fields["Forms_x5099__x8003_"],
 更新日時: (() => {
   const dt = item.fields["Modified"];
   if (!dt) return '';
-
+  
   return new Date(dt).toLocaleString(
     'ja-JP',
     {
@@ -411,6 +411,9 @@ item.fields["Forms_x5099__x8003_"],
   );
 })(),
 
+更新者:
+item.lastModifiedBy?.user?.displayName || '',
+  
 受付日時: (() => {
   const dt = item.fields["_x53d7__x4ed8__x65e5__x6642_"];
   if (!dt) return '';
@@ -795,6 +798,7 @@ function renderCards(data) {
   white-space:nowrap;
 ">
   更新: ${d.更新日時 || '―'}
+  ${d.更新者 ? ` ／ ${d.更新者}` : ''}
 </div>
 
   </div>
@@ -815,12 +819,13 @@ function renderCards(data) {
     ${d.契約種別||'—'}
   </span>
 
-  ${d.巻き直し決裁取得済み
-    ? `<span class="badge badge-decision">
-         決裁: ${d.巻き直し決裁取得済み}
-       </span>`
-    : ''
-  }
+ ${d.契約種別 === '更新契約（巻き直し）'
+   && d.巻き直し決裁取得済み
+  ? `<span class="badge badge-decision">
+       決裁: ${d.巻き直し決裁取得済み}
+     </span>`
+  : ''
+}
 
   <span class="badge ${statusBadgeClass(d._status)}" id="sbadge-${d._uid}">
     ${d._status}
