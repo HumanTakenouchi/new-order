@@ -819,12 +819,11 @@ function renderCards(data) {
     ${d.契約種別||'—'}
   </span>
 
- ${d.契約種別 === '更新契約（巻き直し）'
-   && d.巻き直し決裁取得済み
-  ? `<span class="badge badge-decision">
-       決裁: ${d.巻き直し決裁取得済み}
-     </span>`
-  : ''
+${d.巻き直し決裁取得済み
+ ? `<span class="badge badge-decision">
+      決裁: ${d.巻き直し決裁取得済み}
+    </span>`
+ : ''
 }
 
   <span class="badge ${statusBadgeClass(d._status)}" id="sbadge-${d._uid}">
