@@ -995,6 +995,11 @@ function testExcel(id){
   }
 
   const rows = [
+
+  ['更新契約書作成依頼（個票）'],
+
+  [''],
+
   ['依頼No', d.Id],
 
   ['支店', d.支店],
@@ -1018,13 +1023,15 @@ function testExcel(id){
 
   ['備考', d._formNote || '']
 ];
-
   const wb = XLSX.utils.book_new();
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!merges'] = [
+  { s:{r:0,c:0}, e:{r:0,c:1} }
+];
 ws['!cols'] = [
-  { wch: 20 },
-  { wch: 60 }
+  { wch: 25 },
+  { wch: 80 }
 ];
   
   XLSX.utils.book_append_sheet(
