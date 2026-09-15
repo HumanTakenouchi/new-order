@@ -901,10 +901,15 @@ ${d.巻き直し決裁取得済み
               </div>
             </div>
           </div>
-          <div style="display:flex;align-items:center;margin-top:12px">
-            <button class="save-btn" onclick="saveCard('${d._uid}')" ${dis?'disabled':''}>保存</button>
-            <span class="saved-msg" id="saved-${d._uid}">SharePointに保存しました ✓</span>
-          </div>
+         <div style="display:flex;align-items:center;gap:8px;margin-top:12px">
+  <button class="save-btn" onclick="saveCard('${d._uid}')" ${dis?'disabled':''}>保存</button>
+
+  <button class="save-btn" onclick="testExcel('${d.Id}')">
+    📄 個票Excel
+  </button>
+
+  <span class="saved-msg" id="saved-${d._uid}">SharePointに保存しました ✓</span>
+</div>
         </div>
       </div>
     </div>`;
@@ -951,6 +956,10 @@ async function saveCard(uid) {
     }
   }
 
+function testExcel(id){
+  alert('Excel出力テスト：' + id);
+}
+  
   // 期限ラベルの色も更新（作成完了は通常色に）
   const dlEl = card?.querySelector('.dl-over, .dl-urgent, .dl-soon, .dl-normal, .dl-none');
   if (dlEl && (item._status === '作成完了' || item._status === '依頼キャンセル')) {
