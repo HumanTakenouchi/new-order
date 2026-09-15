@@ -995,26 +995,38 @@ function testExcel(id){
   }
 
   const rows = [
-    ['依頼No', d.Id],
-    ['支店', d.支店],
-    ['営業担当', d.営業担当],
-    ['企業名', d.企業],
-    ['スタッフ名', d.スタッフ],
-    ['人数', d.人数],
-    ['契約種別', d.契約種別],
-    ['契約開始日', d.契約開始日],
-    ['契約終了日', d.契約終了日],
-    ['派遣元責任者', d.派遣元責任者],
-    ['就労制限', d.就労制限],
-    ['内容の変更', d.内容の変更],
-    ['データシート格納', d.データシート格納],
-    ['備考', d._formNote || '']
-  ];
+  ['依頼No', d.Id],
+
+  ['支店', d.支店],
+  ['営業担当', d.営業担当],
+
+  ['企業名', d.企業],
+  ['スタッフ名', d.スタッフ],
+
+  ['契約種別', d.契約種別],
+
+  ['契約期間',
+   `${d.契約開始日} ～ ${d.契約終了日}`],
+
+  ['派遣元責任者', d.派遣元責任者],
+
+  ['就労制限', d.就労制限],
+
+  ['内容の変更', d.内容の変更],
+
+  ['データシート格納', d.データシート格納],
+
+  ['備考', d._formNote || '']
+];
 
   const wb = XLSX.utils.book_new();
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
-
+ws['!cols'] = [
+  { wch: 20 },
+  { wch: 60 }
+];
+  
   XLSX.utils.book_append_sheet(
     wb,
     ws,
@@ -1022,9 +1034,9 @@ function testExcel(id){
   );
 
   XLSX.writeFile(
-    wb,
-    `更新契約書_${d.Id}.xlsx`
-  );
+  wb,
+  `更新契約書_${d.企業}_${d.スタッフ}.xlsx`
+);
 }
   
 function renderAll() { const d = getFiltered(); renderMetrics(d); renderCards(d); }
