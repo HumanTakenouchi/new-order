@@ -983,8 +983,47 @@ async function saveCard(uid) {
 }
 
 function testExcel(id){
-  const d = state.find(x => String(x.Id) === String(id));
-  console.log(d);
+
+  const d = state.find(
+    x => String(x.Id) === String(id)
+  );
+
+  if(!d){
+    alert('対象データが見つかりません');
+    return;
+  }
+
+  const rows = [
+    ['依頼No', d.Id],
+    ['支店', d.支店],
+    ['営業担当', d.営業担当],
+    ['企業名', d.企業],
+    ['スタッフ名', d.スタッフ],
+    ['人数', d.人数],
+    ['契約種別', d.契約種別],
+    ['契約開始日', d.契約開始日],
+    ['契約終了日', d.契約終了日],
+    ['派遣元責任者', d.派遣元責任者],
+    ['就労制限', d.就労制限],
+    ['内容の変更', d.内容の変更],
+    ['データシート格納', d.データシート格納],
+    ['備考', d._formNote || '']
+  ];
+
+  const wb = XLSX.utils.book_new();
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  XLSX.utils.book_append_sheet(
+    wb,
+    ws,
+    '個票'
+  );
+
+  XLSX.writeFile(
+    wb,
+    `更新契約書_${d.Id}.xlsx`
+  );
 }
   
 function renderAll() { const d = getFiltered(); renderMetrics(d); renderCards(d); }
