@@ -983,7 +983,8 @@ async function saveCard(uid) {
 }
 
 function testExcel(id){
-  alert('Excel出力テスト：' + id);
+  const d = state.find(x => String(x.Id) === String(id));
+  console.log(d);
 }
   
 function renderAll() { const d = getFiltered(); renderMetrics(d); renderCards(d); }
