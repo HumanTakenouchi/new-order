@@ -996,14 +996,16 @@ function testExcel(id){
 
   const rows = [
 
-  ['更新契約書作成依頼（個票）'],
+  ['更新契約書作成依頼書'],
 
-  [''],
+ [''],
+ ['印刷日', new Date().toLocaleDateString('ja-JP')],
+ [''],
 
   ['依頼No', d.Id],
 
-  ['支店', d.支店],
-  ['営業担当', d.営業担当],
+ ['支店・営業担当',
+ `${d.支店}　${d.営業担当}`],
 
   ['企業名', d.企業],
   ['スタッフ名', d.スタッフ],
@@ -1026,6 +1028,35 @@ function testExcel(id){
   const wb = XLSX.utils.book_new();
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!rows'] = [
+  { hpt: 28 }, // タイトル
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  { hpt: 80 } // 備考
+];
+  for (const cell in ws) {
+  if (!cell.startsWith('!')) {
+    ws[cell].s = {
+      border: {
+        top:    { style: 'thin' },
+        bottom: { style: 'thin' },
+        left:   { style: 'thin' },
+        right:  { style: 'thin' }
+      }
+    };
+  }
+}
   ws['!merges'] = [
   { s:{r:0,c:0}, e:{r:0,c:1} }
 ];
