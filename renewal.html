@@ -999,7 +999,7 @@ function testExcel(id){
   ['更新契約書作成依頼書'],
 
  [''],
- ['印刷日', new Date().toLocaleDateString('ja-JP')],
+ ['出力日', new Date().toLocaleDateString('ja-JP')],
  [''],
 
   ['依頼No', d.Id],
@@ -1023,7 +1023,10 @@ function testExcel(id){
 
   ['データシート格納', d.データシート格納],
 
-  ['備考', d._formNote || '']
+  [
+  '備考',
+  (d._formNote || '') + '\n\n\n\n\n\n'
+]
 ];
   const wb = XLSX.utils.book_new();
 
@@ -1043,7 +1046,7 @@ function testExcel(id){
   {},
   {},
   {},
-  { hpt: 80 } // 備考
+  { hpt: 120 } // 備考
 ];
   for (const cell in ws) {
   if (!cell.startsWith('!')) {
@@ -1061,8 +1064,8 @@ function testExcel(id){
   { s:{r:0,c:0}, e:{r:0,c:1} }
 ];
 ws['!cols'] = [
-  { wch: 25 },
-  { wch: 80 }
+  { wch: 20 },
+  { wch: 50 }
 ];
   
   XLSX.utils.book_append_sheet(
